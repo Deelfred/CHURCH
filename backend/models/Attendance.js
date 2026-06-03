@@ -2,33 +2,18 @@ const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String, default: "" },
+    service: { type: String, default: "Sunday Service" },
 
-    phone: {
-      type: String,
-      required: true,
-    },
+    time: { type: Date, default: Date.now },
 
-    email: String,
-
-    service: {
-      type: String,
-      default: "Sunday Service",
-    },
-
-    // 🕒 when user checked in
-    time: {
-      type: Date,
-      default: Date.now,
-    },
-
-    // 🔄 SESSION SYSTEM (NEW)
+    // IMPORTANT: NOT REQUIRED
     sessionId: {
       type: String,
-      required: true,
+      default: "default-session",
+      required: false
     },
   },
   { timestamps: true }
