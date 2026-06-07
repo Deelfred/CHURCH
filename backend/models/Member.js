@@ -12,9 +12,14 @@ const memberSchema = new mongoose.Schema(
       default: "Not set",
     },
 
+    department: {
+      type: String,
+      default: "",
+    },
+
     status: {
       type: String,
-      default: "active",
+      default: "Active",
     },
 
     joinedAt: {

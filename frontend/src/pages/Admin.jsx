@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { Link } from "react-router-dom";
+import NotificationCenter from "../components/NotificationCenter";
 
 import {
   ResponsiveContainer,
@@ -21,11 +23,17 @@ import {
   Trash2,
   Pencil,
   UserCheck,
+  History,
 } from "lucide-react";
 
 const BASE_URL = "http://192.168.100.5:5000";
 
 function Admin() {
+  /* =========================================
+     SOCKET STATE
+  ========================================= */
+  const [socket, setSocket] = useState(null);
+
   /* =========================================
      ATTENDANCE STATE
   ========================================= */
@@ -63,32 +71,24 @@ function Admin() {
     });
 
   /* =========================================
-     AXIOS INSTANCE
-  ========================================= */
-  const api = axios.create({
-    baseURL: BASE_URL,
-    timeout: 10000,
-  });
-
-  /* =========================================
      FETCH ATTENDANCE
   ========================================= */
   const fetchAttendance = useCallback(async () => {
     try {
       setLoading(true);
 
-      const res = await api.get(
-        "/api/attendance"
+      const response = await axios.get(
+        `${BASE_URL}/api/attendance`
       );
 
       let data = [];
 
-      if (Array.isArray(res.data)) {
-        data = res.data;
+      if (Array.isArray(response.data)) {
+        data = response.data;
       } else if (
-        Array.isArray(res.data.data)
+        Array.isArray(response.data.data)
       ) {
-        data = res.data.data;
+        data = response.data.data;
       }
 
       const sorted = [...data].sort(
@@ -117,18 +117,18 @@ function Admin() {
     try {
       setMemberLoading(true);
 
-      const res = await api.get(
-        "/api/members"
+      const response = await axios.get(
+        `${BASE_URL}/api/members`
       );
 
       let data = [];
 
-      if (Array.isArray(res.data)) {
-        data = res.data;
+      if (Array.isArray(response.data)) {
+        data = response.data;
       } else if (
-        Array.isArray(res.data.data)
+        Array.isArray(response.data.data)
       ) {
-        data = res.data.data;
+        data = response.data.data;
       }
 
       setMembers(data);
@@ -151,7 +151,7 @@ function Admin() {
     fetchAttendance();
     fetchMembers();
 
-    const socket = io(BASE_URL, {
+    const newSocket = io(BASE_URL, {
       transports: [
         "websocket",
         "polling",
@@ -159,14 +159,16 @@ function Admin() {
       reconnection: true,
     });
 
-    socket.on("connect", () => {
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
       console.log(
         "SOCKET CONNECTED:",
-        socket.id
+        newSocket.id
       );
     });
 
-    socket.on(
+    newSocket.on(
       "new-attendance",
       (newAttendance) => {
         if (!newAttendance?._id) return;
@@ -188,7 +190,7 @@ function Admin() {
       }
     );
 
-    socket.on("disconnect", () => {
+    newSocket.on("disconnect", () => {
       console.log(
         "SOCKET DISCONNECTED"
       );
@@ -200,13 +202,10 @@ function Admin() {
       }, 10000);
 
     return () => {
-      socket.disconnect();
+      newSocket.disconnect();
       clearInterval(refreshInterval);
     };
-  }, [
-    fetchAttendance,
-    fetchMembers,
-  ]);
+  }, [fetchAttendance, fetchMembers]);
 
   /* =========================================
      MEMBER INPUT CHANGE
@@ -257,8 +256,8 @@ function Admin() {
 
     try {
       if (editingId) {
-        await api.put(
-          `/api/members/${editingId}`,
+        await axios.put(
+          `${BASE_URL}/api/members/${editingId}`,
           memberForm
         );
 
@@ -266,8 +265,8 @@ function Admin() {
           "Member updated successfully"
         );
       } else {
-        await api.post(
-          "/api/members",
+        await axios.post(
+          `${BASE_URL}/api/members`,
           memberForm
         );
 
@@ -304,8 +303,8 @@ function Admin() {
     if (!confirmDelete) return;
 
     try {
-      await api.delete(
-        `/api/members/${id}`
+      await axios.delete(
+        `${BASE_URL}/api/members/${id}`
       );
 
       setMembers((prev) =>
@@ -492,6 +491,9 @@ function Admin() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      {/* NOTIFICATION CENTER */}
+      <NotificationCenter socket={socket} />
+
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
@@ -533,6 +535,14 @@ function Admin() {
             }`}
           >
             👥 Members
+
+          <Link
+            to="/admin/activity-log"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 transition"
+          >
+            <History size={18} />
+            Activity Log
+          </Link>
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const memberRoutes = require("./routes/memberRoutes");
+const activityRoutes = require("./routes/activityRoutes");
 
 require("dotenv").config();
 
@@ -39,6 +40,7 @@ app.use(express.json());
 // =======================
 app.use("/api", attendanceRoutes);
 app.use("/api/members", memberRoutes);
+app.use("/api/activities", activityRoutes);
 
 // =======================
 // DB

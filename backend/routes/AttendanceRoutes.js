@@ -19,9 +19,18 @@ router.post("/check-in", async (req, res) => {
 
     await attendance.save();
 
-    // ⚡ REAL-TIME UPDATE
+    // ⚡ REAL-TIME UPDATE - Emit to all clients
     if (io) {
       io.emit("new-attendance", attendance);
+
+      // 🔔 SEND NOTIFICATION TO ADMIN
+      io.emit("admin-notification", {
+        type: "ATTENDANCE",
+        title: `New Check-In: ${attendance.name}`,
+        message: `${attendance.name} checked in for ${attendance.service}`,
+        data: attendance,
+        timestamp: new Date(),
+      });
     }
 
     res.json({

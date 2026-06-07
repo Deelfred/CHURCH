@@ -20,7 +20,7 @@ function CheckIn() {
     e.preventDefault();
 
     try {
-      await axios.post("  http://192.168.100.5:5000/api/check-in", form);
+      await axios.post("http://192.168.100.5:5000/api/check-in", form);
 
       alert("Attendance Submitted");
 
